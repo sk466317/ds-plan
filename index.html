@@ -785,15 +785,9 @@ function updateGenerateButtons() {
 }
 
 function updatePlanningMeta() {
-    const train = getSelectedTrain();
-    const wagonValue = document.getElementById("wagonCount").value || "-";
     const meta = document.getElementById("planningMeta");
     if (!meta) return;
-
-    meta.innerText = "Train No. " + (train.number || "-")
-        + " , TYPE : " + (train.type || "-")
-        + " , Wagons : " + wagonValue
-        + " , Date : " + formatDateOnly(new Date());
+    meta.innerText = getPlanningMetaText();
 }
 
 function ensureTrainType(expectedType) {
@@ -823,10 +817,19 @@ function getPlannerTitle(planType) {
 }
 
 function getSavePlanningName() {
+    return getPlanningMetaText();
+}
+
+function getPlanningMetaText() {
     const train = getSelectedTrain();
-    const type = train.type || currentTrainType || "BLC";
-    const number = train.number || currentTrainNo || "Train";
-    return type + " " + number + " " + formatDateTimeForName(new Date());
+    const number = train.number || currentTrainNo || "-";
+    const type = train.type || currentTrainType || "-";
+    const wagonValue = document.getElementById("wagonCount").value || "-";
+
+    return "Train No. " + number
+        + " , TYPE : " + type
+        + " , Wagons : " + wagonValue
+        + " , Date : " + formatDateOnly(new Date());
 }
 
 function formatDateTimeForName(date) {
@@ -2126,7 +2129,7 @@ function getPlanningTitle() {
 }
 
 function getDownloadFileName() {
-    return sanitizeFileName(getPlanningTitle()) + ".xlsx";
+    return sanitizeFileName(getSavePlanningName()) + ".xlsx";
 }
 
 function sanitizeFileName(name) {
