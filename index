@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>BLC Double Stack Loading Planner</title>
+
+<!-- Excel Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<style>
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #bfc7d1;
+    color: #111827;
+    margin: 0;
+    font-size: 12.8px;
+}
+.container {
+    width: 96%;
+    margin: 12px auto;
+    background: #d4d0c8;
+    border: 2px solid #ffffff;
+    border-right-color: #595959;
+    border-bottom-color: #595959;
+    box-shadow: 2px 2px 0 #777;
+}
+.header {
+    background: linear-gradient(90deg, #0a246a, #3a6ea5);
+    color: white;
+    padding: 7px 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 1px solid #808080;
+}
+.panel {
+    background: #d4d0c8;
+    padding: 10px;
+    border: 2px solid #808080;
+    border-right-color: #ffffff;
+    border-bottom-color: #ffffff;
+    margin: 10px;
+}
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: stretch;
+}
+.groupbox {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    padding: 14px 8px 8px;
+    min-height: 38px;
+    border: 2px groove #ffffff;
+    background: #d4d0c8;
+}
+.groupbox legend {
+    position: absolute;
+    top: -9px;
+    left: 8px;
+    background: #d4d0c8;
+    padding: 0 4px;
+    font-size: 12px;
+    color: #111827;
+}
+.new-planning-box {
+    flex: 1 1 760px;
+}
+.generate-actions {
+    display: flex;
+    flex: 1 1 460px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 5px;
+    margin-left: auto;
+}
+.generate-actions button {
+    min-width: 158px;
+}
+.planning-meta {
+    flex: 1 1 100%;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    margin: 3px 0 4px;
+    color: #0a246a;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid #ffffff;
+    border-right-color: #8a8a8a;
+    border-bottom-color: #8a8a8a;
+}
+.panel label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+input, select, button {
+    padding: 4px 6px;
+    margin: 3px;
+    font-family: inherit;
+    font-size: 11px;
+}
+button {
+    background: #d4d0c8;
+    color: #111827;
+    border: 2px solid #ffffff;
+    border-right-color: #595959;
+    border-bottom-color: #595959;
+    cursor: pointer;
+    min-width: 86px;
+    font-weight: 600;
+}
+button.btn-generate { background: #1d4ed8; color: #ffffff; }
+button.btn-download { background: #047857; color: #ffffff; }
+button.btn-save { background: #7c3aed; color: #ffffff; }
+button.btn-print { background: #c2410c; color: #ffffff; }
+button.btn-show { background: #0f766e; color: #ffffff; }
+button.btn-delete { background: #b91c1c; color: #ffffff; }
+button:active {
+    border: 2px solid #595959;
+    border-right-color: #ffffff;
+    border-bottom-color: #ffffff;
+}
+button:disabled {
+    color: #e5e7eb;
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin: 10px;
+}
+.summary div {
+    background: #f4f4f4;
+    border: 2px inset #ffffff;
+    padding: 8px;
+}
+.summary span {
+    display: block;
+    font-weight: 600;
+}
+.summary strong {
+    display: block;
+    font-size: 18px;
+}
+.summary small {
+    display: block;
+    font-size: 11px;
+    line-height: 1.25;
+}
+.note {
+    background: #fff8d7;
+    border: 2px inset #ffffff;
+    padding: 8px;
+    margin: 10px;
+}
+.table-wrap {
+    margin: 10px;
+    overflow: auto;
+    border: 2px inset #ffffff;
+    background: white;
+}
+table {
+    width: 100%;
+    min-width: 1180px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background: white;
+}
+th, td {
+    border: 1px solid #808080;
+    padding: 5px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 12.8px;
+}
+th {
+    background: #c0c0c0;
+    border: 2px outset #ffffff;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+#output th:nth-child(1) { width: 7%; }
+#output th:nth-child(2) { width: 6%; }
+#output th:nth-child(3) { width: 13%; }
+#output th:nth-child(4) { width: 4%; }
+#output th:nth-child(5) { width: 6%; }
+#output th:nth-child(6) { width: 8%; }
+#output th:nth-child(7) { width: 8%; }
+#output th:nth-child(8) { width: 8%; }
+#output th:nth-child(9) { width: 7%; }
+#output th:nth-child(10) { width: 10%; }
+#output th:nth-child(11) { width: 23%; }
+.ok { background: #d9f3ff; }
+.ok.upper-row { background: #b9dff2; }
+.bad { background: #ffc7ce; }
+.bad.upper-row { background: #f1a8b3; }
+.warn { background: #ffeb9c; }
+.warn.upper-row { background: #e7cc72; }
+.empty-cell { color: #6b7280; }
+.size-20 {
+    background: #b7f7c2 !important;
+    color: #064e1f;
+    font-weight: 700;
+}
+.size-40 {
+    background: #ffc0df !important;
+    color: #831843;
+    font-weight: 700;
+}
+.merged-cell {
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.34);
+}
+.wagon-cell {
+    min-width: 78px;
+    color: #0a246a;
+}
+.position-cell {
+    min-width: 58px;
+}
+.remarks-cell {
+    text-align: left;
+    min-width: 0;
+    max-width: 360px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    font-size: 11.5px;
+    line-height: 1.25;
+}
+.old-planning-select {
+    min-width: 230px;
+}
+.busy-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20, 28, 38, 0.46);
+    z-index: 9999;
+}
+.busy-overlay.show {
+    display: flex;
+}
+.login-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(12, 20, 31, 0.62);
+    z-index: 10000;
+}
+.login-dialog {
+    width: min(360px, 92vw);
+    background: #d4d0c8;
+    border: 2px solid #ffffff;
+    border-right-color: #404040;
+    border-bottom-color: #404040;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.28);
+}
+.login-titlebar {
+    background: linear-gradient(90deg, #0a246a, #3a6ea5);
+    color: #ffffff;
+    padding: 8px 10px;
+    font-weight: 800;
+}
+.login-body {
+    padding: 16px;
+}
+.login-body label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.login-body input {
+    width: calc(100% - 18px);
+    font-size: 13px;
+    padding: 6px 8px;
+}
+.login-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+.login-error {
+    color: #b91c1c;
+    font-weight: 700;
+    min-height: 16px;
+}
+.busy-dialog {
+    width: min(460px, 92vw);
+    background: #d4d0c8;
+    border: 2px solid #ffffff;
+    border-right-color: #404040;
+    border-bottom-color: #404040;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.28);
+}
+.busy-titlebar {
+    background: linear-gradient(90deg, #0a246a, #3a6ea5);
+    color: white;
+    padding: 7px 10px;
+    font-weight: 700;
+}
+.busy-body {
+    padding: 18px;
+    text-align: center;
+}
+.busy-message {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.busy-detail {
+    background: #f7fbff;
+    border: 2px inset #ffffff;
+    padding: 9px;
+    line-height: 1.45;
+    min-height: 38px;
+}
+.calc-animation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 14px 0;
+}
+.calc-chip {
+    width: 48px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 2px outset #ffffff;
+    background: #d9f3ff;
+    color: #0a246a;
+    font-weight: 800;
+    animation: calcPulse 0.9s infinite ease-in-out;
+}
+.calc-chip:nth-child(2) {
+    animation-delay: 0.12s;
+}
+.calc-chip:nth-child(3) {
+    animation-delay: 0.24s;
+}
+.calc-chip:nth-child(4) {
+    animation-delay: 0.36s;
+}
+.calc-bar {
+    height: 8px;
+    overflow: hidden;
+    border: 2px inset #ffffff;
+    background: #eff6ff;
+}
+.calc-bar div {
+    width: 42%;
+    height: 100%;
+    background: linear-gradient(90deg, #1d4ed8, #38bdf8, #1d4ed8);
+    animation: calcMove 1s infinite linear;
+}
+.busy-actions {
+    margin-top: 12px;
+}
+.busy-actions button {
+    min-width: 96px;
+}
+@keyframes calcPulse {
+    0%, 100% { transform: translateY(0); filter: brightness(1); }
+    50% { transform: translateY(-6px); filter: brightness(1.12); }
+}
+@keyframes calcMove {
+    from { transform: translateX(-110%); }
+    to { transform: translateX(260%); }
+}
+@media print {
+    body {
+        background: white;
+    }
+    .container {
+        width: 100%;
+        margin: 0;
+        border: 0;
+        box-shadow: none;
+    }
+    .panel, .note, .summary {
+        display: none;
+    }
+    .header {
+        background: white;
+        color: black;
+        border-bottom: 2px solid black;
+    }
+    .table-wrap {
+        margin: 0;
+        border: 0;
+        overflow: visible;
+    }
+    th {
+        position: static;
+        background: #e5e7eb;
+    }
+    button, input, select {
+        display: none;
+    }
+    .busy-overlay {
+        display: none !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-dialog">
+        <div class="login-titlebar">HTPL Login</div>
+        <div class="login-body">
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" autocomplete="current-password">
+            <div class="login-actions">
+                <button class="btn-show" id="loginBtn" type="button">Login</button>
+                <span class="login-error" id="loginError"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+<div class="header" id="plannerHeader">BLC Double Stack Loading Planner</div>
+
+<div class="panel toolbar">
+    <fieldset class="groupbox new-planning-box">
+        <legend>New Planning</legend>
+        <label>
+            Upload Excel:
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        </label>
+
+        <label>
+            Select Train No.:
+            <select id="trainSelect">
+                <option value="" selected></option>
+            </select>
+        </label>
+
+        <label>
+            Wagons:
+            <select id="wagonCount">
+                <option value="" selected></option>
+                <option>40</option>
+                <option>41</option>
+                <option>42</option>
+                <option>43</option>
+                <option>44</option>
+                <option>45</option>
+                <option>46</option>
+                <option>47</option>
+                <option>48</option>
+            </select>
+        </label>
+
+        <button class="btn-download" onclick="downloadExcel()" id="downloadBtn" disabled>Download</button>
+        <button class="btn-save" onclick="saveJSON()" id="saveBtn" disabled>Save</button>
+        <button class="btn-print" onclick="printPlan()" id="printBtn" disabled>Print</button>
+        <span class="generate-actions">
+            <button class="btn-generate" id="generateBlcBtn" onclick="startGeneratePlan()" disabled>Double Stack Plan (BLC)</button>
+            <button class="btn-generate" id="generateBlcmBtn" onclick="startGenerateRakePlan('BLCM')" disabled>Double Stack Plan (BLCM)</button>
+            <button class="btn-generate" id="generateBlssBtn" onclick="startGenerateRakePlan('BLSS')" disabled>Double Stack Plan (BLSS)</button>
+        </span>
+    </fieldset>
+
+    <div class="planning-meta" id="planningMeta">Train No. - , TYPE : - , Wagons : - , Date : -</div>
+
+    <fieldset class="groupbox">
+        <legend>Old Plannings</legend>
+        <label>
+            Select:
+            <select id="oldPlanningSelect" class="old-planning-select">
+                <option value="">No saved planning</option>
+            </select>
+        </label>
+        <button class="btn-show" onclick="loadOldPlanning()">Show</button>
+        <button class="btn-delete" onclick="deleteOldPlanning()">Delete</button>
+    </fieldset>
+</div>
+
+<div class="note">
+    Excel columns A-D: Container No., SIZE, Gross wt., L/E. Loaded gross weight is used as entered in tonnes.
+    Empty weight is calculated as 20' = 2.3 t and 40' = 4.5 t.
+</div>
+
+<div class="summary" id="summary">
+    <div><strong>0</strong>Total Containers</div>
+    <div><strong>0</strong>Planned</div>
+    <div><strong>0</strong>Not Planned</div>
+    <div><strong>0</strong>Not Match</div>
+</div>
+
+<div class="table-wrap">
+    <table id="output">
+    <thead>
+    <tr>
+        <th>Wagon</th>
+        <th>Position</th>
+        <th>Container No</th>
+        <th>Size</th>
+        <th>L/E</th>
+        <th>Container Weight</th>
+        <th>Weight Difference in 2x20"</th>
+        <th>Wagon Weight</th>
+        <th>Wagon Capacity</th>
+        <th>Status</th>
+        <th>Remarks</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+    </table>
+</div>
+
+</div>
+
+<div class="busy-overlay" id="busyOverlay">
+    <div class="busy-dialog">
+        <div class="busy-titlebar" id="busyTitle">Please Wait</div>
+        <div class="busy-body">
+            <div class="busy-message" id="busyMessage">Please Wait Data is Loading</div>
+            <div class="calc-animation" id="busyAnimation">
+                <div class="calc-chip">20'</div>
+                <div class="calc-chip">40'</div>
+                <div class="calc-chip">MT</div>
+                <div class="calc-chip">TEU</div>
+            </div>
+            <div class="calc-bar" id="busyBar"><div></div></div>
+            <div class="busy-detail" id="busyDetail">Preparing data...</div>
+            <div class="busy-actions" id="busyActions" style="display:none;">
+                <button class="btn-show" onclick="hideBusyOverlay()">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const EMPTY_20_WEIGHT = 2.3;
+const EMPTY_40_WEIGHT = 4.5;
+const MAX_STACK_WEIGHT = 60;
+const TARGET_WAGON_WEIGHT = 57;
+const MAX_TWENTY_PAIR_DIFF = 5;
+const FORTY_HEAVY_SLAB_WEIGHT = 20;
+const PLANNINGS_KEY = "BLC_PLANNINGS_V2";
+const NO_CONTAINER_MATCHED_STATUS = "No Container Matched";
+const WEIGHT_EPSILON = 0.0001;
+const LOGIN_PASSWORD = "HTPL@123";
+const RAKE_RULES = {
+    BLCM: {
+        code: "BLCM",
+        title: "BLCM Double Stack Loading Planner",
+        capacity: 68,
+        capacityText: "68.00 MT",
+        notes: "BLCM wagon capacity 68 MT. Upper stack wt. must not be more than lower stack wt."
+    },
+    BLSS: {
+        code: "BLSS",
+        title: "BLSS Double Stack Loading Planner / WDFC Network",
+        capacity: 80.1,
+        bCarCapacity: 81.4,
+        capacityText: "80.10 MT (A car) / 81.40 MT (B car)",
+        notes: "BLSS capacity used for planning: 80.10 MT A car. B car capacity: 81.40 MT. Upper stack wt. must not be more than lower stack wt."
+    }
+};
+const TRAIN_GROUPS = {
+    BLC: [
+        "TWHT01", "TWHT02", "TWHT03", "TWHT04", "TWHT05", "TWHT06", "TWHT07", "TWHT08",
+        "TWHT09", "TWHT10", "TWHT12", "TWHT13", "TXHT01", "TXHT02", "TXHT03", "TXHT04", "TWHT11"
+    ],
+    BLCM: [
+        "TXHT05", "TXHT06", "TXHT07", "TXBT09", "RK11", "RK12", "TTRL01", "TTRL02"
+    ],
+    BLSS: [
+        "RK090", "RK110", "RK137", "RK138", "JWHT01", "JWHT02", "TXHT8", "TXHT09", "TXHT10", "TXHT11", "TXHT12"
+    ]
+};
+
+let data = [];
+let planRows = [];
+let currentSummary = {
+    total: 0,
+    planned: 0,
+    notPlanned: 0,
+    warnings: 0,
+    totalDetail: null,
+    plannedDetail: null,
+    notPlannedDetail: null
+};
+let savedPlanSignature = "";
+let currentPlanningName = "";
+let currentPlanTitle = "BLC Double Stack Loading Planner";
+let currentTrainNo = "";
+let currentTrainType = "";
+
+document.getElementById("fileInput").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    showBusyOverlay("Please Wait", "Please Wait Data is Loading", "Reading Excel rows...", true, false);
+
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+        const workbook = XLSX.read(event.target.result, { type: "binary" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+        data = readContainerRows(rows);
+        planRows = [];
+        renderSummary(data.length, 0, 0, 0);
+        clearTable();
+        setPlanButtons(false);
+        savedPlanSignature = "";
+        currentPlanningName = "";
+        currentTrainNo = getSelectedTrain().number;
+        currentTrainType = getSelectedTrain().type;
+        setPlanTitle("BLC Double Stack Loading Planner");
+
+        showUploadLoadedOverlay();
+    };
+
+    reader.readAsBinaryString(file);
+});
+
+document.getElementById("trainSelect").addEventListener("change", function() {
+    const train = getSelectedTrain();
+    currentTrainNo = train.number;
+    currentTrainType = train.type;
+    updateGenerateButtons();
+    updatePlanningMeta();
+});
+
+document.getElementById("wagonCount").addEventListener("change", updatePlanningMeta);
+document.getElementById("loginBtn").addEventListener("click", checkLoginPassword);
+document.getElementById("loginPassword").addEventListener("keydown", function(event) {
+    if (event.key === "Enter") checkLoginPassword();
+});
+
+populateTrainSelect();
+updateGenerateButtons();
+updatePlanningMeta();
+
+function readContainerRows(rows) {
+    const cleanRows = rows.filter(row => row.some(cell => String(cell).trim() !== ""));
+    if (!cleanRows.length) return [];
+
+    const first = cleanRows[0].map(cell => String(cell).trim().toLowerCase());
+    const hasHeader = first.some(cell => cell.includes("container") || cell === "size" || cell.includes("gross") || cell.includes("l/e"));
+    const bodyRows = hasHeader ? cleanRows.slice(1) : cleanRows;
+
+    return bodyRows
+        .map((row, index) => normaliseContainer(row, index + 1 + (hasHeader ? 1 : 0)))
+        .filter(Boolean);
+}
+
+function normaliseContainer(row, rowNumber) {
+    const number = String(row[0] || "").trim();
+    const size = normaliseSize(row[1]);
+    const grossWeight = normaliseWeight(row[2]);
+    const condition = normaliseCondition(row[3]);
+
+    if (!number && !size && grossWeight === null && !condition) return null;
+
+    return {
+        id: rowNumber + "-" + number,
+        number: number || "Row " + rowNumber,
+        size,
+        grossWeight,
+        condition,
+        effectiveWeight: calculateEffectiveWeight(size, grossWeight, condition),
+        sourceRow: rowNumber,
+        issue: getContainerIssue(number, size, grossWeight, condition)
+    };
+}
+
+function normaliseSize(value) {
+    const text = String(value || "").trim().toLowerCase();
+    if (text.includes("20")) return 20;
+    if (text.includes("40")) return 40;
+    return null;
+}
+
+function normaliseWeight(value) {
+    const cleaned = String(value || "").replace(/,/g, "").trim();
+    if (!cleaned) return null;
+    const weight = parseFloat(cleaned);
+    if (Number.isNaN(weight)) return null;
+    return weight > 1000 ? weight / 1000 : weight;
+}
+
+function normaliseCondition(value) {
+    const text = String(value || "").trim().toLowerCase();
+    if (!text) return null;
+    if (text.startsWith("l") || text.includes("load")) return "Loaded";
+    if (text.startsWith("e") || text.includes("empty")) return "Empty";
+    return null;
+}
+
+function calculateEffectiveWeight(size, grossWeight, condition) {
+    if (condition === "Empty") {
+        if (size === 20) return EMPTY_20_WEIGHT;
+        if (size === 40) return EMPTY_40_WEIGHT;
+    }
+    return grossWeight;
+}
+
+function getContainerIssue(number, size, grossWeight, condition) {
+    const issues = [];
+    if (!number) issues.push("Container No. missing");
+    if (!size) issues.push("Size must be 20 or 40");
+    if (!condition) issues.push("L/E must be Loaded or Empty");
+    if (condition === "Loaded" && (grossWeight === null || grossWeight <= 0)) issues.push("Loaded gross wt. missing");
+    return issues.join("; ");
+}
+
+function populateTrainSelect() {
+    const select = document.getElementById("trainSelect");
+    if (!select) return;
+
+    const options = ['<option value="">Select Train No.</option>'];
+    Object.keys(TRAIN_GROUPS).forEach(type => {
+        options.push('<optgroup label="' + escapeHTML(type) + '">');
+        TRAIN_GROUPS[type].forEach(number => {
+            options.push('<option value="' + escapeHTML(type + "|" + number) + '">' + escapeHTML(number + " (" + type + ")") + '</option>');
+        });
+        options.push('</optgroup>');
+    });
+
+    select.innerHTML = options.join("");
+}
+
+function getSelectedTrain() {
+    const select = document.getElementById("trainSelect");
+    const value = select ? select.value : "";
+    if (!value) return { type: "", number: "" };
+
+    const parts = value.split("|");
+    return {
+        type: parts[0] || "",
+        number: parts[1] || ""
+    };
+}
+
+function setSelectedTrain(type, number) {
+    const select = document.getElementById("trainSelect");
+    if (!select || !type || !number) return;
+    select.value = type + "|" + number;
+    const train = getSelectedTrain();
+    currentTrainType = train.type;
+    currentTrainNo = train.number;
+    updateGenerateButtons();
+    updatePlanningMeta();
+}
+
+function updateGenerateButtons() {
+    const train = getSelectedTrain();
+    const buttons = {
+        BLC: document.getElementById("generateBlcBtn"),
+        BLCM: document.getElementById("generateBlcmBtn"),
+        BLSS: document.getElementById("generateBlssBtn")
+    };
+
+    Object.keys(buttons).forEach(type => {
+        if (buttons[type]) buttons[type].disabled = train.type !== type;
+    });
+}
+
+function updatePlanningMeta() {
+    const train = getSelectedTrain();
+    const wagonValue = document.getElementById("wagonCount").value || "-";
+    const meta = document.getElementById("planningMeta");
+    if (!meta) return;
+
+    meta.innerText = "Train No. " + (train.number || "-")
+        + " , TYPE : " + (train.type || "-")
+        + " , Wagons : " + wagonValue
+        + " , Date : " + formatDateOnly(new Date());
+}
+
+function ensureTrainType(expectedType) {
+    const train = getSelectedTrain();
+    if (!train.type || !train.number) {
+        alert("Select Train No.");
+        return null;
+    }
+
+    if (train.type !== expectedType) {
+        alert("Selected train " + train.number + " is " + train.type + ". Please use Generate " + train.type + " D/s Plan.");
+        return null;
+    }
+
+    currentTrainType = train.type;
+    currentTrainNo = train.number;
+    return train;
+}
+
+function getPlannerTitle(planType) {
+    const train = getSelectedTrain();
+    const baseTitle = planType === "BLC"
+        ? "BLC Double Stack Loading Planner"
+        : RAKE_RULES[planType].title;
+
+    return train.number ? baseTitle + " - " + train.number : baseTitle;
+}
+
+function getSavePlanningName() {
+    const train = getSelectedTrain();
+    const type = train.type || currentTrainType || "BLC";
+    const number = train.number || currentTrainNo || "Train";
+    return type + " " + number + " " + formatDateTimeForName(new Date());
+}
+
+function formatDateTimeForName(date) {
+    const pad = value => String(value).padStart(2, "0");
+    return [
+        pad(date.getDate()) + "-" + pad(date.getMonth() + 1) + "-" + date.getFullYear(),
+        pad(date.getHours()) + "-" + pad(date.getMinutes()) + "-" + pad(date.getSeconds())
+    ].join(" ");
+}
+
+function formatDateOnly(date) {
+    const pad = value => String(value).padStart(2, "0");
+    return pad(date.getDate()) + "-" + pad(date.getMonth() + 1) + "-" + date.getFullYear();
+}
+
+function checkLoginPassword() {
+    const input = document.getElementById("loginPassword");
+    const error = document.getElementById("loginError");
+    const overlay = document.getElementById("loginOverlay");
+    if (!input || !overlay) return;
+
+    if (input.value === LOGIN_PASSWORD) {
+        overlay.style.display = "none";
+        if (error) error.innerText = "";
+        input.value = "";
+        return;
+    }
+
+    if (error) error.innerText = "Wrong password";
+    input.value = "";
+    if (typeof input.focus === "function") input.focus();
+}
+
+function setPlanTitle(title) {
+    currentPlanTitle = title || "BLC Double Stack Loading Planner";
+    const header = document.getElementById("plannerHeader");
+    if (header) header.innerText = currentPlanTitle;
+}
+
+function processData() {
+    const wagonValue = document.getElementById("wagonCount").value;
+    clearTable();
+    planRows = [];
+    setPlanTitle(getPlannerTitle("BLC"));
+
+    if (!data.length) {
+        alert("Please upload Excel first.");
+        return false;
+    }
+
+    if (!wagonValue) {
+        alert("Select total Wagons");
+        return false;
+    }
+
+    const wagons = parseInt(wagonValue, 10);
+    const pending = data.map(container => ({ ...container }));
+    const plannedIds = new Set();
+    let wagonNo = 1;
+
+    while (wagonNo <= wagons) {
+        const lower = takeLowerStack(pending);
+        if (!lower.length) break;
+
+        lower.forEach(container => plannedIds.add(container.id));
+        const upper = takeUpperContainer(pending, lower);
+        if (upper) plannedIds.add(upper.id);
+
+        addWagonRows(wagonNo, lower, upper ? [upper] : []);
+        wagonNo++;
+    }
+
+    pending.forEach(container => {
+        const reason = getUnplannedReason(container);
+        planRows.push(makeUnplannedRow(container, reason));
+    });
+
+    renderPlan();
+
+    const plannedCount = plannedIds.size;
+    const notPlannedCount = pending.length;
+    const warningCount = planRows.filter(row => row.status !== "OK").length;
+    renderSummary(data.length, plannedCount, notPlannedCount, warningCount);
+    setPlanButtons(planRows.length > 0);
+    savedPlanSignature = "";
+    currentPlanningName = "";
+    return true;
+}
+
+function startGeneratePlan() {
+    const train = ensureTrainType("BLC");
+    if (!train) return;
+
+    if (!data.length) {
+        alert("Please upload Excel first.");
+        return;
+    }
+
+    if (!document.getElementById("wagonCount").value) {
+        alert("Select total Wagons");
+        return;
+    }
+
+    showBusyOverlay("Calculation", "Please wait Data is Calculated", "Checking wagon capacity, 2x20 difference, and upper/lower matching...", true, false);
+
+    setTimeout(() => {
+        const completed = processData();
+        if (!completed) {
+            hideBusyOverlay();
+            return;
+        }
+
+        const planned = currentSummary.plannedDetail || countRowsBySize(planRows.filter(row => row.wagon !== "Not Planned" && row.number));
+        const notPlanned = currentSummary.notPlannedDetail || countRowsBySize(planRows.filter(row => row.wagon === "Not Planned" && row.number));
+        updateBusyOverlay(
+            "Calculation Complete",
+            "Planning Ready",
+            "Planned: " + formatContainerBreakdown(planned) + "<br>Not Planned: " + formatContainerBreakdown(notPlanned) + "<br>Not Match: " + currentSummary.warnings,
+            false,
+            true
+        );
+    }, 450);
+}
+
+function startGenerateRakePlan(rakeType) {
+    const rule = RAKE_RULES[rakeType];
+    if (!rule) return;
+
+    const train = ensureTrainType(rakeType);
+    if (!train) return;
+
+    if (!data.length) {
+        alert("Please upload Excel first.");
+        return;
+    }
+
+    if (!document.getElementById("wagonCount").value) {
+        alert("Select total Wagons");
+        return;
+    }
+
+    showBusyOverlay(
+        rule.code + " Calculation",
+        "Please wait Data is Calculated",
+        "Checking " + rule.code + " lower/upper loading pattern and wagon capacity...",
+        true,
+        false
+    );
+
+    setTimeout(() => {
+        const completed = processRakeData(rakeType);
+        if (!completed) {
+            hideBusyOverlay();
+            return;
+        }
+
+        const planned = currentSummary.plannedDetail || countRowsBySize(planRows.filter(row => row.wagon !== "Not Planned" && row.number));
+        const notPlanned = currentSummary.notPlannedDetail || countRowsBySize(planRows.filter(row => row.wagon === "Not Planned" && row.number));
+        updateBusyOverlay(
+            rule.code + " Calculation Complete",
+            "Planning Ready",
+            "Planned: " + formatContainerBreakdown(planned) + "<br>Not Planned: " + formatContainerBreakdown(notPlanned) + "<br>Not Match: " + currentSummary.warnings,
+            false,
+            true
+        );
+    }, 450);
+}
+
+function processRakeData(rakeType) {
+    const rule = RAKE_RULES[rakeType];
+    const wagonValue = document.getElementById("wagonCount").value;
+    clearTable();
+    planRows = [];
+    setPlanTitle(getPlannerTitle(rakeType));
+
+    if (!data.length) {
+        alert("Please upload Excel first.");
+        return false;
+    }
+
+    if (!wagonValue) {
+        alert("Select total Wagons");
+        return false;
+    }
+
+    const wagons = parseInt(wagonValue, 10);
+    const pending = data.map(container => ({ ...container }));
+    const plannedIds = new Set();
+    let wagonNo = 1;
+
+    while (wagonNo <= wagons) {
+        const lower = takeRakeLowerStack(pending, rakeType);
+        if (!lower.length) break;
+
+        lower.forEach(container => plannedIds.add(container.id));
+        const upper = takeRakeUpperContainer(pending, lower, rakeType, wagonNo);
+        if (upper) plannedIds.add(upper.id);
+
+        addRakeWagonRows(wagonNo, lower, upper ? [upper] : [], rakeType);
+        wagonNo++;
+    }
+
+    pending.forEach(container => {
+        const reason = getRakeUnplannedReason(container, rakeType);
+        planRows.push(makeUnplannedRow(container, reason));
+    });
+
+    renderPlan();
+
+    const plannedCount = plannedIds.size;
+    const notPlannedCount = pending.length;
+    const warningCount = planRows.filter(row => row.status !== "OK").length;
+    renderSummary(data.length, plannedCount, notPlannedCount, warningCount);
+    setPlanButtons(planRows.length > 0);
+    savedPlanSignature = "";
+    currentPlanningName = "";
+    return true;
+}
+
+function takeRakeLowerStack(pending, rakeType) {
+    const pair = takeBestRakeTwentyPair(pending, rakeType);
+    if (pair.length) return pair;
+
+    const fortyIndex = takeBestRakeFortyLowerIndex(pending, rakeType);
+    if (fortyIndex >= 0) return [pending.splice(fortyIndex, 1)[0]];
+
+    return [];
+}
+
+function takeBestRakeFortyLowerIndex(pending, rakeType) {
+    let best = { index: -1, score: -1 };
+
+    pending.forEach((container, index) => {
+        if (container.size !== 40 || container.issue) return;
+
+        const result = validateRakeStack(rakeType, [container], []);
+        if (!result.isValid) return;
+
+        const score = getFortyLowerSlabPriority(container) * 100000
+            + conditionRank(container) * 1000
+            + (container.effectiveWeight || 0);
+        if (score > best.score) {
+            best = { index, score };
+        }
+    });
+
+    return best.index;
+}
+
+function takeBestRakeTwentyPair(pending, rakeType) {
+    const twentyIndexes = pending
+        .map((container, index) => ({ container, index }))
+        .filter(item => item.container.size === 20 && !item.container.issue);
+
+    if (twentyIndexes.length < 2) return [];
+
+    if (rakeType === "BLCM") {
+        return takeBlcmTwentyPairLikeBlc(pending, twentyIndexes);
+    }
+
+    let best = null;
+    for (let i = 0; i < twentyIndexes.length; i++) {
+        for (let j = i + 1; j < twentyIndexes.length; j++) {
+            const first = twentyIndexes[i].container;
+            const second = twentyIndexes[j].container;
+            const result = validateRakeStack(rakeType, [first, second], []);
+            if (!result.isValid) continue;
+
+            const total = stackWeight([first, second]);
+            const conditionScore = conditionRank(first) + conditionRank(second);
+            const score = conditionScore * 1000 + total;
+            if (!best || score > best.score) {
+                best = { indexes: [twentyIndexes[i].index, twentyIndexes[j].index], score };
+            }
+        }
+    }
+
+    if (!best) return [];
+    return removeIndexes(pending, best.indexes);
+}
+
+function takeBlcmTwentyPairLikeBlc(pending, twentyIndexes) {
+    const anchors = twentyIndexes.slice().sort((a, b) => {
+        const weightDiff = (b.container.effectiveWeight || 0) - (a.container.effectiveWeight || 0);
+        if (Math.abs(weightDiff) > WEIGHT_EPSILON) return weightDiff;
+        const conditionDiff = conditionRank(b.container) - conditionRank(a.container);
+        if (conditionDiff) return conditionDiff;
+        return a.index - b.index;
+    });
+
+    for (const anchor of anchors) {
+        let bestPartner = null;
+
+        for (const partner of twentyIndexes) {
+            if (partner.index === anchor.index) continue;
+
+            const weightDifference = Math.abs((anchor.container.effectiveWeight || 0) - (partner.container.effectiveWeight || 0));
+            if (!isAllowedTwentyPairDifference(weightDifference)) continue;
+
+            const result = validateRakeStack("BLCM", [anchor.container, partner.container], []);
+            if (!result.isValid) continue;
+
+            if (!bestPartner || compareTwentyPairPartner(anchor, partner, bestPartner, weightDifference) < 0) {
+                bestPartner = {
+                    ...partner,
+                    weightDifference
+                };
+            }
+        }
+
+        if (bestPartner) {
+            return removePairInOrder(pending, anchor.index, bestPartner.index);
+        }
+    }
+
+    return [];
+}
+
+function takeRakeUpperContainer(pending, lower, rakeType, wagonNo) {
+    const candidates = pending
+        .map((container, index) => ({ container, index }))
+        .filter(item => item.container.size === 40 && !item.container.issue)
+        .map(item => ({ ...item, result: validateRakeStack(rakeType, lower, [item.container], wagonNo) }))
+        .filter(item => item.result.isValid);
+
+    if (!candidates.length) return null;
+
+    candidates.sort((a, b) => {
+        const isFortyOnForty = lower.length === 1 && lower[0].size === 40;
+        if (isFortyOnForty) {
+            const upperSlabDiff = getFortyUpperSlabPriority(b.container) - getFortyUpperSlabPriority(a.container);
+            if (upperSlabDiff) return upperSlabDiff;
+        }
+
+        const loadedDiff = conditionRank(b.container) - conditionRank(a.container);
+        if (loadedDiff) return loadedDiff;
+        return (b.container.effectiveWeight || 0) - (a.container.effectiveWeight || 0);
+    });
+
+    return pending.splice(candidates[0].index, 1)[0];
+}
+
+function addRakeWagonRows(wagonNo, lower, upper, rakeType) {
+    const result = validateRakeStack(rakeType, lower, upper, wagonNo);
+    const lowerWeight = stackWeight(lower);
+    const upperWeight = stackWeight(upper);
+    const wagonWeight = lowerWeight + upperWeight;
+    const wagonLimit = result.limitText || getRakeCapacityText(rakeType);
+    const wagonRemarks = buildRakeWagonRemarks(rakeType, lower, upper, result);
+    const weightDifference = calculateLowerTwentyDifference(lower);
+
+    lower.forEach(container => {
+        planRows.push(makePlanRow(wagonNo, "Lower", container, weightDifference, wagonWeight, wagonLimit, result, wagonRemarks));
+    });
+
+    if (upper.length) {
+        upper.forEach(container => {
+            planRows.push(makePlanRow(wagonNo, "Upper", container, weightDifference, wagonWeight, wagonLimit, result, wagonRemarks));
+        });
+    } else {
+        planRows.push({
+            wagon: "Wagon " + wagonNo,
+            position: "Upper",
+            number: "",
+            size: "",
+            condition: "",
+            weightDifference,
+            grossWeight: "",
+            stackWeight: formatNumber(wagonWeight),
+            limit: wagonLimit,
+            status: result.isValid ? NO_CONTAINER_MATCHED_STATUS : "BAD",
+            remarks: result.isValid ? wagonRemarks : result.messages.join("; ")
+        });
+    }
+}
+
+function validateRakeStack(rakeType, lower, upper, wagonNo) {
+    const rule = RAKE_RULES[rakeType];
+    const messages = [];
+    const lowerWeight = stackWeight(lower);
+    const upperWeight = stackWeight(upper);
+    const hasUpper = upper.length > 0;
+    const lowerInfo = getRakeLowerInfo(rakeType, lower);
+    let maxUpperWeight = null;
+    let limitText = getRakeCapacityText(rakeType, wagonNo);
+
+    lower.concat(upper).forEach(container => {
+        if (container.issue) messages.push(container.number + ": " + container.issue);
+    });
+
+    messages.push(...lowerInfo.messages);
+
+    if (hasUpper && upper.length !== 1) {
+        messages.push("Upper must be 1 x 40'");
+    }
+
+    if (hasUpper && upper[0].size !== 40) {
+        messages.push("Upper must be 1 x 40'");
+    }
+
+    if (hasUpper && upper[0].condition !== "Loaded" && upper[0].condition !== "Empty") {
+        messages.push("Upper L/E must be Loaded or Empty");
+    }
+
+    if (hasUpper && lowerInfo.isValid) {
+        maxUpperWeight = getRakeMaxUpperWeight(rakeType, lower, upper[0].condition);
+        if (maxUpperWeight === null) {
+            messages.push(getRakeUpperNotAllowedMessage(rakeType, lowerInfo, upper[0].condition));
+        } else {
+            if (isWeightGreater(upperWeight, maxUpperWeight)) {
+                messages.push("Upper stack exceeds allowed " + formatMetricTonne(maxUpperWeight));
+            }
+
+            if (isWeightGreater(upperWeight, lowerWeight)) {
+                messages.push("Upper stack wt. more than lower stack wt.");
+            }
+
+            const capacity = getRakeActiveCapacity(rakeType, lower, upper[0].condition, wagonNo);
+            if (isWeightGreater(lowerWeight + upperWeight, capacity)) {
+                messages.push("Lower + upper exceeds " + formatMetricTonne(capacity));
+            }
+
+            limitText = getRakeLimitText(rakeType, lower, upper[0].condition, maxUpperWeight, wagonNo);
+        }
+    }
+
+    if (!hasUpper && lowerInfo.isValid) {
+        limitText = getRakeCapacityText(rakeType, wagonNo);
+        if (rule && isWeightGreater(lowerWeight, getRakeCapacity(rakeType, wagonNo))) {
+            messages.push("Lower stack exceeds " + formatMetricTonne(getRakeCapacity(rakeType, wagonNo)));
+        }
+    }
+
+    return {
+        isValid: messages.length === 0,
+        messages,
+        maxUpperWeight,
+        limitText,
+        lowerInfo
+    };
+}
+
+function getRakeLowerInfo(rakeType, lower) {
+    const messages = [];
+    const lowerWeight = stackWeight(lower);
+    const isTwentyLower = lower.length === 2 && lower.every(container => container.size === 20);
+    const isFortyLower = lower.length === 1 && lower[0].size === 40;
+    const lowerCondition = getStackCondition(lower);
+    let maxLowerWeight = null;
+
+    if (!isTwentyLower && !isFortyLower) {
+        messages.push("Lower must be 2 x 20' or 1 x 40'");
+    }
+
+    if (lowerCondition === "Mixed") {
+        messages.push("Lower stack condition must be all Loaded or all Empty as per " + rakeType + " pattern");
+    }
+
+    if (!messages.length) {
+        maxLowerWeight = getRakeMaxLowerWeight(rakeType, isTwentyLower, isFortyLower, lowerCondition);
+        if (maxLowerWeight === null) {
+            messages.push(rakeType + " lower stack condition not allowed");
+        } else if (isWeightGreater(lowerWeight, maxLowerWeight)) {
+            messages.push(rakeType + " lower stack exceeds " + formatMetricTonne(maxLowerWeight));
+        }
+    }
+
+    return {
+        isValid: messages.length === 0,
+        messages,
+        isTwentyLower,
+        isFortyLower,
+        lowerCondition,
+        lowerWeight,
+        maxLowerWeight
+    };
+}
+
+function getRakeMaxLowerWeight(rakeType, isTwentyLower, isFortyLower, lowerCondition) {
+    if (rakeType === "BLCM") {
+        if (isTwentyLower && lowerCondition === "Loaded") return 61;
+        if (isTwentyLower && lowerCondition === "Empty") return EMPTY_20_WEIGHT * 2;
+        if (isFortyLower && lowerCondition === "Loaded") return 68;
+        if (isFortyLower && lowerCondition === "Empty") return EMPTY_40_WEIGHT;
+    }
+
+    if (rakeType === "BLSS") {
+        if (isTwentyLower && lowerCondition === "Loaded") return 71.5;
+        if (isTwentyLower && lowerCondition === "Empty") return EMPTY_20_WEIGHT * 2;
+        if (isFortyLower && lowerCondition === "Loaded") return 36;
+        if (isFortyLower && lowerCondition === "Empty") return EMPTY_40_WEIGHT;
+    }
+
+    return null;
+}
+
+function getRakeMaxUpperWeight(rakeType, lower, upperCondition) {
+    const lowerInfo = getRakeLowerInfo(rakeType, lower);
+    if (!lowerInfo.isValid) return null;
+
+    const lowerWeight = lowerInfo.lowerWeight;
+    const capacity = getRakeCapacity(rakeType);
+    let maxUpper = null;
+
+    if (lowerInfo.lowerCondition === "Empty") {
+        if (upperCondition !== "Empty") return null;
+        maxUpper = Math.min(EMPTY_40_WEIGHT, lowerWeight, capacity - lowerWeight);
+        return maxUpper > WEIGHT_EPSILON ? maxUpper : null;
+    }
+
+    if (upperCondition === "Empty") {
+        if (rakeType === "BLCM") {
+            if (lowerInfo.isTwentyLower && lowerWeight <= 61) maxUpper = Math.min(EMPTY_40_WEIGHT, lowerWeight, capacity - lowerWeight);
+            if (lowerInfo.isFortyLower && lowerWeight < 30.5) maxUpper = Math.min(EMPTY_40_WEIGHT, lowerWeight, capacity - lowerWeight);
+        }
+
+        if (rakeType === "BLSS") {
+            if (lowerInfo.isTwentyLower && lowerWeight <= 71.5) maxUpper = Math.min(EMPTY_40_WEIGHT, lowerWeight, capacity - lowerWeight);
+            if (lowerInfo.isFortyLower && lowerWeight <= 36) maxUpper = Math.min(EMPTY_40_WEIGHT, lowerWeight, capacity - lowerWeight);
+        }
+
+        return maxUpper && maxUpper > WEIGHT_EPSILON ? maxUpper : null;
+    }
+
+    if (upperCondition !== "Loaded") return null;
+
+    if (rakeType === "BLCM") {
+        if (lowerInfo.isTwentyLower) {
+            if (lowerWeight >= 50 && lowerWeight <= 61) {
+                maxUpper = 68 - lowerWeight;
+            } else if (lowerWeight > 30.5 && lowerWeight < 50) {
+                maxUpper = 61.5 - lowerWeight;
+            }
+            else if (lowerWeight <= 30.5) maxUpper = 30.5;
+            else return null;
+        }
+
+        if (lowerInfo.isFortyLower) {
+            if (lowerWeight < 30.5) maxUpper = 30.5 - WEIGHT_EPSILON;
+            else return null;
+        }
+    }
+
+    if (rakeType === "BLSS") {
+        if (lowerInfo.isTwentyLower) {
+            if (lowerWeight > 44) return null;
+            maxUpper = Math.min(30.5, capacity - lowerWeight - getHeaviestContainerWeight(lower));
+        }
+
+        if (lowerInfo.isFortyLower) {
+            if (lowerWeight < 36) maxUpper = Math.min(30.5, capacity - lowerWeight);
+            else return null;
+        }
+    }
+
+    if (maxUpper === null) return null;
+    maxUpper = Math.min(maxUpper, lowerWeight, capacity - lowerWeight);
+    return maxUpper > WEIGHT_EPSILON ? maxUpper : null;
+}
+
+function getRakeLimitText(rakeType, lower, upperCondition, maxUpperWeight, wagonNo) {
+    if (rakeType === "BLCM") {
+        const lowerWeight = stackWeight(lower);
+        if (upperCondition === "Loaded" && lower.length === 2 && lowerWeight > 30.5 && lowerWeight < 50) {
+            return "61.50 MT";
+        }
+        return "68.00 MT";
+    }
+
+    if (rakeType === "BLSS") {
+        return getRakeCapacityText(rakeType, wagonNo);
+    }
+
+    return maxUpperWeight ? formatMetricTonne(stackWeight(lower) + maxUpperWeight) : "";
+}
+
+function getRakeActiveCapacity(rakeType, lower, upperCondition, wagonNo) {
+    if (rakeType === "BLCM" && upperCondition === "Loaded" && lower.length === 2 && lower.every(container => container.size === 20)) {
+        const lowerWeight = stackWeight(lower);
+        if (lowerWeight > 30.5 && lowerWeight < 50) return 61.5;
+        if (lowerWeight >= 50 && lowerWeight <= 61) return 68;
+    }
+
+    return getRakeCapacity(rakeType, wagonNo);
+}
+
+function getRakeCapacity(rakeType, wagonNo) {
+    const rule = RAKE_RULES[rakeType];
+    return rule ? rule.capacity : MAX_STACK_WEIGHT;
+}
+
+function getRakeCapacityText(rakeType, wagonNo) {
+    const rule = RAKE_RULES[rakeType];
+    return rule ? rule.capacityText : formatMetricTonne(MAX_STACK_WEIGHT);
+}
+
+function getRakeUpperNotAllowedMessage(rakeType, lowerInfo, upperCondition) {
+    if (lowerInfo.lowerCondition === "Empty" && upperCondition === "Loaded") {
+        return "Loaded upper not allowed on empty lower";
+    }
+
+    if (rakeType === "BLCM" && lowerInfo.isFortyLower && lowerInfo.lowerWeight >= 30.5) {
+        return "BLCM 1 x 40' lower 30.5 MT or above cannot take upper stack";
+    }
+
+    if (rakeType === "BLSS" && lowerInfo.isTwentyLower && lowerInfo.lowerWeight > 44 && upperCondition === "Loaded") {
+        return "BLSS 2 x 20' lower loaded-loaded upper allowed only up to 44 MT lower stack";
+    }
+
+    if (rakeType === "BLSS" && lowerInfo.isFortyLower && lowerInfo.lowerWeight >= 36 && upperCondition === "Loaded") {
+        return "BLSS 1 x 40' lower loaded-loaded upper allowed only below 36 MT";
+    }
+
+    return rakeType + " upper stack not allowed for this loading pattern";
+}
+
+function buildRakeWagonRemarks(rakeType, lower, upper, result) {
+    if (!result.isValid) return result.messages.join("; ");
+
+    const lowerInfo = result.lowerInfo || getRakeLowerInfo(rakeType, lower);
+    const lowerRemark = (lowerInfo.isTwentyLower ? "Lower 2 x 20'" : "Lower 1 x 40'") + " " + lowerInfo.lowerCondition;
+
+    if (!upper.length) {
+        return lowerRemark + " + Upper Not Matched.\n" + buildRakeUpperSuggestion(rakeType, lower);
+    }
+
+    const upperRemark = "Upper 1 x 40' " + upper[0].condition;
+    const upperLimit = result.maxUpperWeight ? "\nUpper allowed up to " + formatMetricTonne(result.maxUpperWeight) + "." : "";
+    const ruleNote = getRakeRuleNote(rakeType, result);
+    return lowerRemark + " + " + upperRemark + upperLimit + ruleNote;
+}
+
+function getRakeRuleNote(rakeType, result) {
+    if (rakeType === "BLCM") {
+        const capacity = result.limitText || getRakeCapacityText(rakeType);
+        return "\nBLCM wagon capacity " + capacity + ". Upper stack wt. must be less than lower stack wt.";
+    }
+
+    return RAKE_RULES[rakeType] ? "\n" + RAKE_RULES[rakeType].notes : "";
+}
+
+function buildRakeUpperSuggestion(rakeType, lower) {
+    const loadedLimit = getRakeMaxUpperWeight(rakeType, lower, "Loaded");
+    const emptyLimit = getRakeMaxUpperWeight(rakeType, lower, "Empty");
+    const suggestions = [];
+
+    if (loadedLimit) {
+        suggestions.push(formatMetricTonne(loadedLimit) + " tak ka 40' loaded container Upper me load ho sakta hai");
+    }
+
+    if (emptyLimit && emptyLimit >= EMPTY_40_WEIGHT - WEIGHT_EPSILON) {
+        suggestions.push("40' empty container Upper me load ho sakta hai");
+    }
+
+    if (!suggestions.length) {
+        return "Suggestion: Upper loading capacity not available as per " + rakeType + " pattern.";
+    }
+
+    return "Suggestion: " + suggestions.join("; ") + ".";
+}
+
+function getRakeUnplannedReason(container, rakeType) {
+    if (container.issue) return container.issue;
+    if (container.size === 20) return rakeType + ": No valid 2 x 20' lower pair matched as per pattern";
+    if (container.size === 40) return rakeType + ": No valid lower/upper 40' position available as per pattern";
+    return rakeType + ": Container not matched";
+}
+
+function getStackCondition(containers) {
+    if (!containers.length) return "";
+    if (containers.every(container => container.condition === "Loaded")) return "Loaded";
+    if (containers.every(container => container.condition === "Empty")) return "Empty";
+    return "Mixed";
+}
+
+function getHeaviestContainerWeight(containers) {
+    return containers.reduce((max, container) => Math.max(max, container.effectiveWeight || 0), 0);
+}
+
+function isWeightGreater(value, limit) {
+    return Number(value) - Number(limit) > WEIGHT_EPSILON;
+}
+
+function isFortyHeavySlab(container) {
+    return container && container.size === 40 && (container.effectiveWeight || 0) > FORTY_HEAVY_SLAB_WEIGHT;
+}
+
+function getFortyLowerSlabPriority(container) {
+    return isFortyHeavySlab(container) ? 1 : 0;
+}
+
+function getFortyUpperSlabPriority(container) {
+    return container && container.size === 40 && !isFortyHeavySlab(container) ? 1 : 0;
+}
+
+function takeLowerStack(pending) {
+    const pair = takeBestTwentyPair(pending);
+    if (pair.length) return pair;
+
+    const fortyIndex = takeBestFortyLowerIndex(pending);
+    if (fortyIndex >= 0) return [pending.splice(fortyIndex, 1)[0]];
+
+    return [];
+}
+
+function takeBestFortyLowerIndex(pending) {
+    let best = { index: -1, score: -1 };
+
+    pending.forEach((container, index) => {
+        if (container.size !== 40 || container.issue) return;
+
+        const validLowerWeight = container.effectiveWeight <= MAX_STACK_WEIGHT;
+        const score = (validLowerWeight ? 1000000 : 0)
+            + getFortyLowerSlabPriority(container) * 100000
+            + conditionRank(container) * 100
+            + container.effectiveWeight;
+        if (score > best.score) {
+            best = { index, score };
+        }
+    });
+
+    return best.index;
+}
+
+function takeBestTwentyPair(pending) {
+    const twentyIndexes = pending
+        .map((container, index) => ({ container, index }))
+        .filter(item => item.container.size === 20 && !item.container.issue);
+
+    if (twentyIndexes.length < 2) return [];
+
+    const anchors = twentyIndexes.slice().sort((a, b) => {
+        const weightDiff = (b.container.effectiveWeight || 0) - (a.container.effectiveWeight || 0);
+        if (Math.abs(weightDiff) > WEIGHT_EPSILON) return weightDiff;
+        const conditionDiff = conditionRank(b.container) - conditionRank(a.container);
+        if (conditionDiff) return conditionDiff;
+        return a.index - b.index;
+    });
+
+    for (const anchor of anchors) {
+        let bestPartner = null;
+
+        for (const partner of twentyIndexes) {
+            if (partner.index === anchor.index) continue;
+
+            const total = stackWeight([anchor.container, partner.container]);
+            const weightDifference = Math.abs((anchor.container.effectiveWeight || 0) - (partner.container.effectiveWeight || 0));
+            if (!isAllowedTwentyPairDifference(weightDifference)) continue;
+            if (total > MAX_STACK_WEIGHT + WEIGHT_EPSILON) continue;
+
+            if (!bestPartner || compareTwentyPairPartner(anchor, partner, bestPartner, weightDifference) < 0) {
+                bestPartner = {
+                    ...partner,
+                    weightDifference
+                };
+            }
+        }
+
+        if (bestPartner) {
+            return removePairInOrder(pending, anchor.index, bestPartner.index);
+        }
+    }
+
+    return [];
+}
+
+function compareTwentyPairPartner(anchor, candidate, current, candidateDifference) {
+    const currentDifference = current.weightDifference;
+    if (Math.abs(candidateDifference - currentDifference) > WEIGHT_EPSILON) {
+        return currentDifference - candidateDifference;
+    }
+
+    const conditionDiff = conditionRank(current.container) - conditionRank(candidate.container);
+    if (conditionDiff) return conditionDiff;
+
+    const candidateWeight = candidate.container.effectiveWeight || 0;
+    const currentWeight = current.container.effectiveWeight || 0;
+    if (Math.abs(candidateWeight - currentWeight) > WEIGHT_EPSILON) {
+        return currentWeight - candidateWeight;
+    }
+
+    return candidate.index - current.index;
+}
+
+function removePairInOrder(items, firstIndex, secondIndex) {
+    const first = items[firstIndex];
+    const second = items[secondIndex];
+    [firstIndex, secondIndex]
+        .sort((a, b) => b - a)
+        .forEach(index => items.splice(index, 1));
+    return [first, second];
+}
+
+function isAllowedTwentyPairDifference(weightDifference) {
+    return weightDifference <= MAX_TWENTY_PAIR_DIFF + WEIGHT_EPSILON;
+}
+
+function getUnplannedReason(container) {
+    if (container.issue) return container.issue;
+    if (container.size === 20) return "No matching 20' lower pair within 5.00 MT difference";
+    return "No wagon/valid position available";
+}
+
+function takeUpperContainer(pending, lower) {
+    const lowerWeight = stackWeight(lower);
+    const candidates = pending
+        .map((container, index) => ({ container, index }))
+        .filter(item => item.container.size === 40 && !item.container.issue)
+        .map(item => ({ ...item, result: validateStack(lower, [item.container]) }))
+        .filter(item => item.result.isValid)
+        .filter(item => lowerWeight + item.container.effectiveWeight <= TARGET_WAGON_WEIGHT + WEIGHT_EPSILON);
+
+    if (!candidates.length) return null;
+
+    const isFortyOnForty = lower.length === 1 && lower[0].size === 40;
+
+    candidates.sort((a, b) => {
+        if (isFortyOnForty) {
+            const upperSlabDiff = getFortyUpperSlabPriority(b.container) - getFortyUpperSlabPriority(a.container);
+            if (upperSlabDiff) return upperSlabDiff;
+
+            const totalA = lowerWeight + a.container.effectiveWeight;
+            const totalB = lowerWeight + b.container.effectiveWeight;
+            if (totalA !== totalB) return totalB - totalA;
+        }
+
+        const loadedDiff = conditionRank(b.container) - conditionRank(a.container);
+        if (loadedDiff) return loadedDiff;
+        return isFortyOnForty
+            ? b.container.effectiveWeight - a.container.effectiveWeight
+            : a.container.effectiveWeight - b.container.effectiveWeight;
+    });
+
+    return pending.splice(candidates[0].index, 1)[0];
+}
+
+function removeIndexes(items, indexes) {
+    return indexes
+        .slice()
+        .sort((a, b) => b - a)
+        .map(index => items.splice(index, 1)[0])
+        .reverse();
+}
+
+function conditionRank(container) {
+    return container.condition === "Loaded" ? 2 : container.condition === "Empty" ? 1 : 0;
+}
+
+function addWagonRows(wagonNo, lower, upper) {
+    const result = validateStack(lower, upper);
+    const lowerWeight = stackWeight(lower);
+    const upperWeight = stackWeight(upper);
+    const wagonWeight = lowerWeight + upperWeight;
+    const wagonLimit = formatMetricTonne(MAX_STACK_WEIGHT);
+    const wagonRemarks = buildWagonRemarks(lower, upper, result);
+    const weightDifference = calculateLowerTwentyDifference(lower);
+
+    lower.forEach(container => {
+        planRows.push(makePlanRow(wagonNo, "Lower", container, weightDifference, wagonWeight, wagonLimit, result, wagonRemarks));
+    });
+
+    if (upper.length) {
+        upper.forEach(container => {
+            planRows.push(makePlanRow(wagonNo, "Upper", container, weightDifference, wagonWeight, wagonLimit, result, wagonRemarks));
+        });
+    } else {
+        planRows.push({
+            wagon: "Wagon " + wagonNo,
+            position: "Upper",
+            number: "",
+            size: "",
+            condition: "",
+            weightDifference,
+            grossWeight: "",
+            stackWeight: formatNumber(wagonWeight),
+            limit: wagonLimit,
+            status: result.isValid ? NO_CONTAINER_MATCHED_STATUS : "BAD",
+            remarks: result.isValid ? wagonRemarks : result.messages.join("; ")
+        });
+    }
+}
+
+function makePlanRow(wagonNo, position, container, weightDifference, stackWt, limit, result, wagonRemarks) {
+    const status = result.isValid ? "OK" : "BAD";
+    const remarks = [container.issue, wagonRemarks].filter(Boolean).join("; ");
+
+    return {
+        wagon: "Wagon " + wagonNo,
+        position,
+        number: container.number,
+        size: container.size ? container.size + "'" : "",
+        condition: container.condition || "",
+        weightDifference,
+        grossWeight: container.grossWeight === null ? "" : formatNumber(container.grossWeight),
+        stackWeight: formatNumber(stackWt),
+        limit,
+        status,
+        remarks: remarks || "OK"
+    };
+}
+
+function makeUnplannedRow(container, reason) {
+    return {
+        wagon: "Not Planned",
+        position: "",
+        number: container.number,
+        size: container.size ? container.size + "'" : "",
+        condition: container.condition || "",
+        weightDifference: "",
+        grossWeight: container.grossWeight === null ? "" : formatNumber(container.grossWeight),
+        stackWeight: container.effectiveWeight === null ? "" : formatNumber(container.effectiveWeight),
+        limit: "",
+        status: "BAD",
+        remarks: reason
+    };
+}
+
+function lowerPatternRemark(container) {
+    if (container.size === 20) return "Lower 2 x 20'";
+    if (container.size === 40) return "Lower 1 x 40'";
+    return "";
+}
+
+function calculateLowerTwentyDifference(lower) {
+    if (lower.length !== 2 || !lower.every(container => container.size === 20)) return "";
+    return formatNumber(Math.abs((lower[0].effectiveWeight || 0) - (lower[1].effectiveWeight || 0)));
+}
+
+function buildWagonRemarks(lower, upper, result) {
+    if (!result.isValid) return result.messages.join("; ");
+
+    const lowerRemark = lower.length === 2 ? "Lower 2 x 20'" : lowerPatternRemark(lower[0]);
+    if (!upper.length) {
+        return lowerRemark + " + Upper Not Matched.\n" + buildUpperSuggestion(lower);
+    }
+
+    const upperRemark = "Upper 1 x 40'";
+    return [lowerRemark, upperRemark].filter(Boolean).join(" + ");
+}
+
+function buildUpperSuggestion(lower) {
+    const lowerWeight = stackWeight(lower);
+    const allowedUpperWeight = Math.min(MAX_STACK_WEIGHT - lowerWeight, lowerWeight);
+
+    if (allowedUpperWeight <= 0) {
+        return "Suggestion: Upper loading capacity not available.";
+    }
+
+    return "Suggestion: " + formatMetricTonne(allowedUpperWeight) + " tak ka 40' container Upper me load ho sakta hai.";
+}
+
+function validateStack(lower, upper) {
+    const messages = [];
+    const lowerWeight = stackWeight(lower);
+    const upperWeight = stackWeight(upper);
+    const hasUpper = upper.length > 0;
+    const lowerAllEmpty = lower.length > 0 && lower.every(container => container.condition === "Empty");
+    const upperHasLoaded = upper.some(container => container.condition === "Loaded");
+
+    lower.concat(upper).forEach(container => {
+        if (container.issue) messages.push(container.number + ": " + container.issue);
+    });
+
+    if (lower.length === 1 && lower[0].size === 20) {
+        messages.push("Lower 20' needs pair for 2 x 20' position");
+    }
+
+    if (lower.length > 2 || lower.filter(container => container.size === 20).length === 1 && lower.some(container => container.size === 40)) {
+        messages.push("Invalid lower position");
+    }
+
+    if (lowerWeight > MAX_STACK_WEIGHT) {
+        messages.push("Lower stack exceeds " + formatMetricTonne(MAX_STACK_WEIGHT));
+    }
+
+    if (hasUpper && upper[0].size !== 40) {
+        messages.push("Upper must be 1 x 40'");
+    }
+
+    if (hasUpper && lowerWeight + upperWeight > MAX_STACK_WEIGHT) {
+        messages.push("Lower + upper exceeds " + formatMetricTonne(MAX_STACK_WEIGHT));
+    }
+
+    if (hasUpper && upperWeight > lowerWeight) {
+        messages.push("Upper stack wt. more than lower stack wt.");
+    }
+
+    if (hasUpper && lowerAllEmpty && upperHasLoaded) {
+        messages.push("Loaded upper not allowed on empty lower");
+    }
+
+    return {
+        isValid: messages.length === 0,
+        messages
+    };
+}
+
+function stackWeight(containers) {
+    return containers.reduce((total, container) => total + (container.effectiveWeight || 0), 0);
+}
+
+function renderPlan() {
+    const output = document.querySelector("#output tbody");
+    output.innerHTML = "";
+
+    planRows.forEach((row, index) => {
+        const statusClass = getStatusClass(row.status);
+        const tr = document.createElement("tr");
+        tr.className = statusClass + (row.position === "Upper" ? " upper-row" : "");
+        const cells = [];
+
+        if (isFirstInGroup(planRows, index, sameWagonGroup)) {
+            cells.push(tableCell(row.wagon, countGroupSpan(planRows, index, sameWagonGroup), "merged-cell wagon-cell"));
+        }
+
+        if (isFirstInGroup(planRows, index, samePositionGroup)) {
+            cells.push(tableCell(row.position, countGroupSpan(planRows, index, samePositionGroup), "merged-cell position-cell"));
+        }
+
+        cells.push(tableCell(row.number || "-", 1, row.number ? "" : "empty-cell"));
+        cells.push(tableCell(row.size, 1, getSizeClass(row.size)));
+        cells.push(tableCell(row.condition, 1, ""));
+        cells.push(tableCell(row.grossWeight, 1, ""));
+        if (isFirstInGroup(planRows, index, sameWeightDifferenceGroup)) {
+            const span = countGroupSpan(planRows, index, sameWeightDifferenceGroup);
+            cells.push(tableCell(row.weightDifference || "", span, "merged-cell"));
+        }
+
+        if (isFirstInGroup(planRows, index, sameStackLimitRemarksGroup)) {
+            const span = countGroupSpan(planRows, index, sameStackLimitRemarksGroup);
+            cells.push(tableCell(row.stackWeight, span, "merged-cell"));
+            cells.push(tableCell(row.limit, span, "merged-cell"));
+        }
+
+        if (isFirstInGroup(planRows, index, sameStatusGroup)) {
+            const span = countGroupSpan(planRows, index, sameStatusGroup);
+            cells.push(tableCell(row.status, span, "merged-cell"));
+        }
+
+        if (isFirstInGroup(planRows, index, sameStackLimitRemarksGroup)) {
+            const span = countGroupSpan(planRows, index, sameStackLimitRemarksGroup);
+            cells.push(tableCell(row.remarks, span, "merged-cell remarks-cell"));
+        }
+
+        tr.innerHTML = cells.join("");
+        output.appendChild(tr);
+    });
+}
+
+function getStatusClass(status) {
+    if (status === "OK") return "ok";
+    if (status === "WARN" || status === NO_CONTAINER_MATCHED_STATUS) return "warn";
+    return "bad";
+}
+
+function getSizeClass(size) {
+    if (size === "20'") return "size-20";
+    if (size === "40'") return "size-40";
+    return "";
+}
+
+function renderSummary(total, planned, notPlanned, warnings) {
+    const totalDetail = countContainers(data);
+    const plannedDetail = countRowsBySize(planRows.filter(row => row.wagon !== "Not Planned" && row.number));
+    const notPlannedDetail = countRowsBySize(planRows.filter(row => row.wagon === "Not Planned" && row.number));
+
+    currentSummary = {
+        total,
+        planned,
+        notPlanned,
+        warnings,
+        totalDetail,
+        plannedDetail,
+        notPlannedDetail
+    };
+
+    document.getElementById("summary").innerHTML = `
+        ${summaryBox("Total Containers", totalDetail)}
+        ${summaryBox("Planned", plannedDetail)}
+        ${summaryBox("Not Planned", notPlannedDetail)}
+        <div><span>Not Match</span><strong>${warnings}</strong><small>No Container Matched / Bad</small></div>
+    `;
+}
+
+function summaryBox(label, detail) {
+    return `<div><span>${escapeHTML(label)}</span><strong>${detail.total}</strong><small>${escapeHTML(formatContainerBreakdown(detail))}</small></div>`;
+}
+
+function countContainers(containers) {
+    const detail = { total: 0, twenty: 0, forty: 0, teu: 0 };
+    containers.forEach(container => {
+        if (!container || !container.size) return;
+        addSizeToDetail(detail, container.size);
+    });
+    return detail;
+}
+
+function countRowsBySize(rows) {
+    const detail = { total: 0, twenty: 0, forty: 0, teu: 0 };
+    rows.forEach(row => {
+        if (!row || !row.size) return;
+        addSizeToDetail(detail, row.size);
+    });
+    return detail;
+}
+
+function addSizeToDetail(detail, size) {
+    const normalisedSize = normaliseSize(size);
+    if (normalisedSize === 20) {
+        detail.total++;
+        detail.twenty++;
+        detail.teu += 1;
+    }
+    if (normalisedSize === 40) {
+        detail.total++;
+        detail.forty++;
+        detail.teu += 2;
+    }
+}
+
+function formatContainerBreakdown(detail) {
+    return `${detail.twenty} x 20' & ${detail.forty} x 40' = ${detail.teu} TEUs`;
+}
+
+function showUploadLoadedOverlay() {
+    const detail = countContainers(data);
+    updateBusyOverlay(
+        "Data Loaded",
+        "Data Loaded Successfully",
+        "Total Loaded: " + formatContainerBreakdown(detail),
+        false,
+        true
+    );
+}
+
+function showBusyOverlay(title, message, detail, showAnimation, showActions) {
+    updateBusyOverlay(title, message, detail, showAnimation, showActions);
+    document.getElementById("busyOverlay").classList.add("show");
+}
+
+function updateBusyOverlay(title, message, detail, showAnimation, showActions) {
+    document.getElementById("busyTitle").innerText = title;
+    document.getElementById("busyMessage").innerText = message;
+    document.getElementById("busyDetail").innerHTML = detail;
+    document.getElementById("busyAnimation").style.display = showAnimation ? "flex" : "none";
+    document.getElementById("busyBar").style.display = showAnimation ? "block" : "none";
+    document.getElementById("busyActions").style.display = showActions ? "block" : "none";
+}
+
+function hideBusyOverlay() {
+    document.getElementById("busyOverlay").classList.remove("show");
+}
+
+function clearTable() {
+    document.querySelector("#output tbody").innerHTML = "";
+}
+
+function tableCell(value, span, className) {
+    const rowSpan = span > 1 ? ` rowspan="${span}"` : "";
+    const cellClass = className ? ` class="${className}"` : "";
+    return `<td${rowSpan}${cellClass}>${escapeHTML(value)}</td>`;
+}
+
+function isFirstInGroup(rows, index, matcher) {
+    return index === 0 || !matcher(rows[index - 1], rows[index]);
+}
+
+function countGroupSpan(rows, index, matcher) {
+    let span = 1;
+    while (index + span < rows.length && matcher(rows[index + span - 1], rows[index + span])) {
+        span++;
+    }
+    return span;
+}
+
+function sameWagonGroup(previous, current) {
+    return previous.wagon === current.wagon;
+}
+
+function samePositionGroup(previous, current) {
+    return previous.wagon === current.wagon && previous.position === current.position;
+}
+
+function sameStackLimitRemarksGroup(previous, current) {
+    return previous.wagon === current.wagon
+        && previous.stackWeight === current.stackWeight
+        && previous.limit === current.limit
+        && previous.remarks === current.remarks;
+}
+
+function sameWeightDifferenceGroup(previous, current) {
+    return previous.wagon === current.wagon
+        && (previous.weightDifference || "") === (current.weightDifference || "");
+}
+
+function sameStatusGroup(previous, current) {
+    return previous.wagon === current.wagon
+        && previous.position === current.position
+        && previous.status === current.status;
+}
+
+function setPlanButtons(enabled) {
+    document.getElementById("downloadBtn").disabled = !enabled;
+    document.getElementById("saveBtn").disabled = !enabled;
+    document.getElementById("printBtn").disabled = !enabled;
+}
+
+function formatNumber(value) {
+    if (value === null || value === "" || Number.isNaN(value)) return "";
+    return Number(value).toFixed(2).replace(/\.?0+$/, "");
+}
+
+function formatMetricTonne(value) {
+    if (value === null || value === "" || Number.isNaN(value)) return "";
+    return Number(value).toFixed(2) + " MT";
+}
+
+function escapeHTML(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function downloadExcel() {
+    if (!planRows.length) return;
+
+    if (savedPlanSignature !== getPlanSignature()) {
+        alert("Please Save the Planning for Downloading");
+        return;
+    }
+
+    const workbook = buildStyledWorkbook();
+    XLSX.writeFile(workbook, getDownloadFileName(), { bookType: "xlsx", cellStyles: true });
+}
+
+function buildStyledWorkbook() {
+    const headers = ["Wagon", "Position", "Container No", "Size", "L/E", "Container Weight", "Weight Difference in 2x20\"", "Wagon Weight", "Wagon Capacity", "Status", "Remarks"];
+    const sheetRows = [
+        [getPlanningTitle(), "", "", "", "", "", "", "", "", "", ""],
+        [buildExcelSummaryText(), "", "", "", "", "", "", "", "", "", ""],
+        headers
+    ];
+
+    planRows.forEach(row => {
+        sheetRows.push([
+            row.wagon,
+            row.position,
+            row.number || "-",
+            row.size,
+            row.condition,
+            row.grossWeight,
+            row.weightDifference || "",
+            row.stackWeight,
+            row.limit,
+            row.status,
+            row.remarks
+        ]);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetRows);
+    worksheet["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 10 } },
+        ...buildWorksheetMerges(planRows, 3)
+    ];
+    worksheet["!cols"] = [
+        { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 8 }, { wch: 10 },
+        { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 48 }
+    ];
+    worksheet["!rows"] = [
+        { hpt: 24 },
+        { hpt: 34 },
+        { hpt: 22 }
+    ];
+
+    applyWorksheetStyles(worksheet, sheetRows.length, headers.length);
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Loading Plan");
+    return workbook;
+}
+
+function buildExcelSummaryText() {
+    return [
+        "Total Containers: " + formatContainerBreakdown(currentSummary.totalDetail || countContainers(data)),
+        "Planned: " + formatContainerBreakdown(currentSummary.plannedDetail || countRowsBySize(planRows.filter(row => row.wagon !== "Not Planned" && row.number))),
+        "Not Planned: " + formatContainerBreakdown(currentSummary.notPlannedDetail || countRowsBySize(planRows.filter(row => row.wagon === "Not Planned" && row.number))),
+        "Not Match: " + currentSummary.warnings
+    ].join(" | ");
+}
+
+function getPlanningTitle() {
+    return currentPlanningName || currentPlanTitle || "BLC Double Stack Loading Planner";
+}
+
+function getDownloadFileName() {
+    return sanitizeFileName(getPlanningTitle()) + ".xlsx";
+}
+
+function sanitizeFileName(name) {
+    const cleaned = String(name || "BLC_LoadingPlan")
+        .replace(/\.(xlsx|xls)$/i, "")
+        .replace(/[\\/:*?"<>|]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return (cleaned || "BLC_LoadingPlan").slice(0, 120);
+}
+
+function applyWorksheetStyles(worksheet, rowCount, colCount) {
+    const border = {
+        top: { style: "thin", color: { rgb: "666666" } },
+        bottom: { style: "thin", color: { rgb: "666666" } },
+        left: { style: "thin", color: { rgb: "666666" } },
+        right: { style: "thin", color: { rgb: "666666" } }
+    };
+    const baseStyle = {
+        border,
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        font: { name: "Calibri", sz: 11 }
+    };
+
+    for (let row = 0; row < rowCount; row++) {
+        for (let col = 0; col < colCount; col++) {
+            const address = XLSX.utils.encode_cell({ r: row, c: col });
+            if (!worksheet[address]) worksheet[address] = { t: "s", v: "" };
+            worksheet[address].s = cloneStyle(baseStyle);
+        }
+    }
+
+    styleRange(worksheet, 0, 0, 0, 10, {
+        ...baseStyle,
+        fill: solidFill("1F4E78"),
+        font: { name: "Calibri", sz: 16, bold: true, color: { rgb: "FFFFFF" } }
+    });
+    styleRange(worksheet, 1, 0, 1, 10, {
+        ...baseStyle,
+        fill: solidFill("D9EAD3"),
+        font: { name: "Calibri", sz: 11, bold: true },
+        alignment: { horizontal: "left", vertical: "center", wrapText: true }
+    });
+    styleRange(worksheet, 2, 0, 2, 10, {
+        ...baseStyle,
+        fill: solidFill("B7C9E2"),
+        font: { name: "Calibri", sz: 11, bold: true }
+    });
+
+    planRows.forEach((row, index) => {
+        const excelRow = index + 3;
+        const fill = getExcelRowFill(row);
+        styleRange(worksheet, excelRow, 0, excelRow, 10, {
+            ...baseStyle,
+            fill: solidFill(fill)
+        });
+
+        applyCellStyle(worksheet, excelRow, 3, {
+            ...baseStyle,
+            fill: solidFill(row.size === "20'" ? "B7F7C2" : row.size === "40'" ? "FFC0DF" : fill),
+            font: { name: "Calibri", sz: 11, bold: true, color: { rgb: row.size === "40'" ? "831843" : "064E1F" } }
+        });
+        applyCellStyle(worksheet, excelRow, 10, {
+            ...baseStyle,
+            fill: solidFill(fill),
+            alignment: { horizontal: "left", vertical: "center", wrapText: true }
+        });
+    });
+}
+
+function getExcelRowFill(row) {
+    const statusClass = getStatusClass(row.status);
+    if (statusClass === "bad") return row.position === "Upper" ? "F1A8B3" : "FFC7CE";
+    if (statusClass === "warn") return row.position === "Upper" ? "E7CC72" : "FFEB9C";
+    return row.position === "Upper" ? "B9DFF2" : "D9F3FF";
+}
+
+function styleRange(worksheet, startRow, startCol, endRow, endCol, style) {
+    for (let row = startRow; row <= endRow; row++) {
+        for (let col = startCol; col <= endCol; col++) {
+            applyCellStyle(worksheet, row, col, style);
+        }
+    }
+}
+
+function applyCellStyle(worksheet, row, col, style) {
+    const address = XLSX.utils.encode_cell({ r: row, c: col });
+    if (!worksheet[address]) worksheet[address] = { t: "s", v: "" };
+    worksheet[address].s = cloneStyle(style);
+}
+
+function cloneStyle(style) {
+    return JSON.parse(JSON.stringify(style));
+}
+
+function solidFill(rgb) {
+    return { patternType: "solid", fgColor: { rgb } };
+}
+
+function buildWorksheetMerges(rows, rowOffset = 1) {
+    const merges = [];
+    addMergesForGroup(merges, rows, 0, sameWagonGroup, rowOffset);
+    addMergesForGroup(merges, rows, 1, samePositionGroup, rowOffset);
+    addMergesForGroup(merges, rows, 6, sameWeightDifferenceGroup, rowOffset);
+    [7, 8, 10].forEach(column => addMergesForGroup(merges, rows, column, sameStackLimitRemarksGroup, rowOffset));
+    addMergesForGroup(merges, rows, 9, sameStatusGroup, rowOffset);
+    return merges;
+}
+
+function addMergesForGroup(merges, rows, column, matcher, rowOffset) {
+    let index = 0;
+    while (index < rows.length) {
+        const span = countGroupSpan(rows, index, matcher);
+        if (span > 1) {
+            merges.push({
+                s: { r: index + rowOffset, c: column },
+                e: { r: index + rowOffset + span - 1, c: column }
+            });
+        }
+        index += span;
+    }
+}
+
+function saveJSON() {
+    if (!planRows.length) {
+        alert("Generate or show a plan first.");
+        return;
+    }
+
+    const defaultName = getSavePlanningName();
+    const name = ((typeof prompt === "function" ? prompt("Planning name:", defaultName) : defaultName) || defaultName).trim() || defaultName;
+    const plannings = getSavedPlannings();
+    const entry = {
+        id: String(Date.now()),
+        name,
+        createdAt: new Date().toISOString(),
+        planTitle: currentPlanTitle,
+        trainNo: currentTrainNo || getSelectedTrain().number,
+        trainType: currentTrainType || getSelectedTrain().type,
+        wagonCount: document.getElementById("wagonCount").value,
+        data,
+        planRows,
+        summary: currentSummary
+    };
+
+    plannings.unshift(entry);
+    localStorage.setItem(PLANNINGS_KEY, JSON.stringify(plannings.slice(0, 50)));
+    savedPlanSignature = getPlanSignature();
+    currentPlanningName = name;
+    populateOldPlanningList(entry.id);
+    alert("Planning saved locally!");
+}
+
+function getPlanSignature() {
+    return JSON.stringify(planRows);
+}
+
+function getSavedPlannings() {
+    try {
+        const raw = localStorage.getItem(PLANNINGS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function populateOldPlanningList(selectedId) {
+    const select = document.getElementById("oldPlanningSelect");
+    if (!select) return;
+
+    const plannings = getSavedPlannings();
+    if (!plannings.length) {
+        select.innerHTML = '<option value="">No saved planning</option>';
+        return;
+    }
+
+    select.innerHTML = '<option value="">Select old planning</option>' + plannings.map(entry => {
+        const selected = entry.id === selectedId ? " selected" : "";
+        return `<option value="${escapeHTML(entry.id)}"${selected}>${escapeHTML(entry.name)}</option>`;
+    }).join("");
+}
+
+function loadOldPlanning() {
+    const selectedId = document.getElementById("oldPlanningSelect").value;
+    if (!selectedId) {
+        alert("Select old planning first.");
+        return;
+    }
+
+    const entry = getSavedPlannings().find(item => item.id === selectedId);
+    if (!entry) {
+        alert("Saved planning not found.");
+        populateOldPlanningList();
+        return;
+    }
+
+    data = Array.isArray(entry.data) ? entry.data : [];
+    planRows = Array.isArray(entry.planRows) ? entry.planRows : [];
+    currentPlanningName = entry.name || "";
+    if (entry.trainType && entry.trainNo) {
+        setSelectedTrain(entry.trainType, entry.trainNo);
+    }
+    if (entry.wagonCount) {
+        document.getElementById("wagonCount").value = entry.wagonCount;
+    }
+    updatePlanningMeta();
+    setPlanTitle(entry.planTitle || "BLC Double Stack Loading Planner");
+    const summary = entry.summary || calculateSummaryFromRows(planRows);
+    renderSummary(summary.total, summary.planned, summary.notPlanned, summary.warnings);
+    renderPlan();
+    setPlanButtons(planRows.length > 0);
+    savedPlanSignature = getPlanSignature();
+}
+
+function deleteOldPlanning() {
+    const selectedId = document.getElementById("oldPlanningSelect").value;
+    if (!selectedId) {
+        alert("Select old planning first.");
+        return;
+    }
+
+    if (typeof confirm === "function" && !confirm("Delete selected planning?")) return;
+
+    const plannings = getSavedPlannings().filter(item => item.id !== selectedId);
+    localStorage.setItem(PLANNINGS_KEY, JSON.stringify(plannings));
+    populateOldPlanningList();
+}
+
+function calculateSummaryFromRows(rows) {
+    const total = rows.filter(row => row.number).length;
+    const notPlanned = rows.filter(row => row.wagon === "Not Planned").length;
+    const warnings = rows.filter(row => row.status !== "OK").length;
+    return {
+        total,
+        planned: total - notPlanned,
+        notPlanned,
+        warnings
+    };
+}
+
+function printPlan() {
+    if (!planRows.length) {
+        alert("Generate or show a plan first.");
+        return;
+    }
+    window.print();
+}
+
+populateOldPlanningList();
+</script>
+
+</body>
+</html>
